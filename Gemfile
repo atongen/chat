@@ -1,7 +1,12 @@
 source 'https://rubygems.org'
 
+gem "rake", "~> 10.0"
+gem "rspec"
+gem "dotenv"
 gem "faye-websocket"
 gem "sinatra"
 gem "puma"
 gem "march_hare", "~> 2.11.0"
 gem "celluloid"
+gem "jdbc-postgres"
+gem "sequel"

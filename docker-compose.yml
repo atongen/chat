@@ -1,25 +1,37 @@
 web:
-  extends:
-    file: docker-compose-common.yml
-    service: app
-  ports: 5000:5000
+  build: .
+  links:
+    - postgres
+    - rabbitmq
+  ports: "5000:5000"
+  env_file:
+    - '.env.docker'
 socket1:
-  extends:
-    file: docker-compose-common.yml
-    service: app
-  ports: 6480:5000
+  build: .
+  links:
+    - postgres
+    - rabbitmq
+  ports: "6480:5000"
+  env_file:
+    - '.env.docker'
 socket2:
-  extends:
-    file: docker-compose-common.yml
-    service: app
-  ports: 6481:5000
+  build: .
+  links:
+    - postgres
+    - rabbitmq
+  ports: "6481:5000"
+  env_file:
+    - '.env.docker'
 postgres:
   image: postgres:9.4
-  ports:
-    - 5432:5432
+  expose:
+    - "5432"
+  env_file:
+    - '.env.docker'
 rabbitmq:
   image: rabbitmq:3.5
   hostname: rabbit1
-  ports:
-    - 5672:5672
-    - 15672:15672
+  expose:
+    - "5672"
+  env_file:
+    - '.env.docker'
