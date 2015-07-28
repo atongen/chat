@@ -23,7 +23,7 @@ socket2:
   env_file:
     - '.env.docker'
 postgres:
-  image: postgres:9.4
+  build: dockerfiles/postgres
   expose:
     - "5432"
   env_file:
