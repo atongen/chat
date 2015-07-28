@@ -1,0 +1,25 @@
+web:
+  extends:
+    file: docker-compose-common.yml
+    service: app
+  ports: 5000:5000
+socket1:
+  extends:
+    file: docker-compose-common.yml
+    service: app
+  ports: 6480:5000
+socket2:
+  extends:
+    file: docker-compose-common.yml
+    service: app
+  ports: 6481:5000
+postgres:
+  image: postgres:9.4
+  ports:
+    - 5432:5432
+rabbitmq:
+  image: rabbitmq:3.5
+  hostname: rabbit1
+  ports:
+    - 5672:5672
+    - 15672:15672
