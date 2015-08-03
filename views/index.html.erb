@@ -6,11 +6,16 @@
     <link href="assets/css/application.css" rel="stylesheet" media="screen">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
-  <body>
+  <body data-action="index">
     <div class="container">
       <div class="jumbotron">
         <h1>Chat POC</h1>
       </div>
+      <ul>
+        <% @rooms.each do |room| %>
+          <ul><%= room.name %></ul>
+        <% end %>
+      </ul>
       <form id="input-form" class="form-inline">
         <div class="form-group">
           <input id="input-handle" type="text" class="form-control" placeholder="Enter handle" autofocus />

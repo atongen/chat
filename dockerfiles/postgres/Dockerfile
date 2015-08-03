@@ -1,16 +1,19 @@
-FROM postgres:9.4
+FROM debian:jessie
 MAINTAINER Andrew Tongen atongen@gmail.com
 
-RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
-
-RUN pg_createcluster 9.4 main
-RUN /etc/init.d/postgresql start
-RUN cat /etc/postgresql/9.4/main/postgresql.conf
-
+RUN apt-get update && apt-get install -y python-software-properties software-properties-common postgresql-9.4 postgresql-client-9.4 postgresql-contrib-9.4
 USER postgres
-RUN createuser --superuser docker
-RUN createdb -O docker chat_development
-RUN createdb -O docker chat_test
-RUN createdb -O docker chat_production
-RUN psql -c "alter user docker with password 'docker';"
+
+RUN /etc/init.d/postgresql start && \
+    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" && \
+    createdb -O docker docker && \
+    createdb -O docker chat_development && \
+    createdb -O docker chat_test && \
+    createdb -O docker chat_production
+
+RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.4/main/pg_hba.conf
+RUN echo "listen_addresses='*'" >> /etc/postgresql/9.4/main/postgresql.conf
+
+EXPOSE 5432
+
+ENTRYPOINT ["/usr/lib/postgresql/9.4/bin/postgres", "-D", "/var/lib/postgresql/9.4/main", "-c", "config_file=/etc/postgresql/9.4/main/postgresql.conf"]
