@@ -5,19 +5,20 @@ actions['index'] = function() {
 }
 
 actions['room'] = function() {
-    var uri       = "<%= @websocket_uri %>/?token=<%= @room_user.token %>";
-    var ws        = new WebSocket(uri);
+    var token = $('meta[name="token"]').attr('content');
+    var uri   = "<%= @websocket_uri %>/?token=" + token;
+    var ws    = new WebSocket(uri);
 
     ws.onopen = function(event) {
-        console.log(event);
+        console.log('opening');
     }
 
-    ws.onevent = function(event) {
-        console.log(event);
+    ws.onmessage = function(event) {
+        var msg = JSON.parse(event.data);
+        console.log(msg);
 
         var f = $('#chat-text');
         var text = "";
-        var msg = JSON.parse(event.data);
         var time = new Date(msg.created_at);
         var timeStr = time.toLocaleTimeString();
 
@@ -29,17 +30,17 @@ actions['room'] = function() {
                 text = "(" + timeStr + ") <b>" + msg.user_id + "</b>: " + msg.body + "<br>";
 
                 break;
-            case "userlist":
+            case "user_list":
                 var ul = "";
-                for (i=0; i < msg.users.length; i++) {
-                    ul += msg.users[i] + "<br>";
+                for (i=0; i < msg.user_ids.length; i++) {
+                    ul += msg.user_ids[i] + "<br>";
                 }
                 document.getElementById("userlistbox").innerHTML = ul;
                 break;
         }
 
         if (text.length) {
-            f.append("<div class='panel panel-default'><div class='panel-heading'>" + data.handle + "</div><div class='panel-body'>" + text + "</div></div>");
+            f.append("<div class='panel panel-default'><div class='panel-heading'>" + msg.user_id + "</div><div class='panel-body'>" + text + "</div></div>");
             f.stop().animate({
                 scrollTop: f[0].scrollHeight
             }, 800);
@@ -47,18 +48,16 @@ actions['room'] = function() {
     };
 
     ws.onclose = function(event) {
-        console.log(event);
     };
 
     ws.onerror = function(event) {
-        console.log(event);
+        console.log('error', event);
     };
 
     $("#input-form").on("submit", function(event) {
         event.preventDefault();
-        var handle = $("#input-handle")[0].value;
-        var text   = $("#input-text")[0].value;
-        ws.send(JSON.stringify({ handle: handle, text: text }));
+        var body = $("#input-text")[0].value;
+        ws.send(JSON.stringify({ type: "room_message", body: body }));
         $("#input-text")[0].value = "";
     });
 }

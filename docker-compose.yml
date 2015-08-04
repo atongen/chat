@@ -29,9 +29,10 @@ postgres:
   env_file:
     - '.env.docker'
 rabbitmq:
-  image: rabbitmq:3.5
+  image: rabbitmq:3.5-management
   hostname: rabbit1
   expose:
     - "5672"
+    - "15672"
   env_file:
     - '.env.docker'

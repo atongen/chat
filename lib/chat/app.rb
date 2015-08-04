@@ -15,24 +15,30 @@ module Chat
 
     use Chat::Websocket
 
-    helpers Sinatra::Cookies
-
     helpers do
       def websocket_uri(user)
         uris = Config.websocket_uris
         uri = uris[user.id % uris.length]
         "ws://#{uri.host}:#{uri.port}"
       end
-    end
 
-    before do
-      if session[:user_id]
-        @user = Model::User[session[:user_id]]
-      else
-        @user = Model::User.create(created_at: Time.now)
-        session[:user_id] = @user.id
+      def current_user
+        return @current_user if @current_user
+
+        if session[:user_id]
+          @current_user = Model::User[session[:user_id]]
+        end
+
+        unless @current_user
+          @current_user = Model::User.create(created_at: Time.now)
+          session[:user_id] = @current_user.id
+        end
+
+        @current_user
       end
     end
+
+    before { current_user }
 
     get "/" do
       @rooms = Model::Room.all
@@ -43,15 +49,19 @@ module Chat
       @room = Model::Room.find_or_create(name: n) do |r|
         r.created_at = Time.now
       end
-      @room_user = Model::RoomUser.find_or_create(user_id: @user.id, room_id: @room.id) do |ru|
+
+      @room_messages = @room.room_messages
+
+      @room_user = Model::RoomUser.find_or_create(user_id: current_user.id, room_id: @room.id) do |ru|
         ru.created_at = Time.now
         ru.token = (0...40).map { ('a'..'z').to_a[rand(26)] }.join
       end
+
       erb :"room.html"
     end
 
     get "/assets/js/application.js" do
-      @websocket_uri = websocket_uri(@user)
+      @websocket_uri = websocket_uri(current_user)
       content_type :js
       erb :"application.js"
     end

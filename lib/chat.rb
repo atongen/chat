@@ -28,8 +28,10 @@ require 'chat/model/room_message'
 require 'chat/model/user_message'
 
 require 'chat/app'
+require 'chat/user'
+require 'chat/room'
 
 at_exit do
   Chat::DB.disconnect
-  Chat::RABBIT.close
+  Chat::RABBITMQ.close
 end
