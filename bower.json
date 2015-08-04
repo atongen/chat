@@ -1,0 +1,23 @@
+{
+  "name": "chat",
+  "version": "0.0.0",
+  "authors": [
+    "Andrew Tongen <atongen@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/assets/vendor/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-bootstrap": "~0.13.2",
+    "angular": "~1.4.3",
+    "html5-boilerplate": "~5.2.0",
+    "angular-resource": "~1.4.3",
+    "bootstrap": "~3.3.5"
+  }
+}

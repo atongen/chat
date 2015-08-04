@@ -15,21 +15,26 @@ module Chat
     end
 
     def message(user, msg)
-      case msg['type']
-      when 'room_join'
-        handle_room_join(user, msg)
-      when 'conversation_join'
-        handle_conversation_join(user, msg)
-      when 'room_leave'
-        handle_room_leave(user, msg)
-      when 'conversation_leave'
-        handle_conversation_leave(user, msg)
-      when 'room_message'
-        handle_room_message(user, msg)
-      when 'conversation_message'
-        handle_conversation_message(user, msg)
-      else
-        puts "Unknown message type: #{msg['type']}"
+      begin
+        case msg['type']
+        when 'room_join'
+          handle_room_join(user, msg)
+        when 'conversation_join'
+          handle_conversation_join(user, msg)
+        when 'room_leave'
+          handle_room_leave(user, msg)
+        when 'conversation_leave'
+          handle_conversation_leave(user, msg)
+        when 'room_message'
+          handle_room_message(user, msg)
+        when 'conversation_message'
+          handle_conversation_message(user, msg)
+        else
+          puts "Unknown message type: #{msg['type']}"
+        end
+      rescue => e
+        puts "Error handling message: #{e.inspect}"
+        puts e.backtrace.join("\n")
       end
     end
 
@@ -94,7 +99,7 @@ module Chat
 
     def handle_room_leave(user, msg)
       room_id = msg['room_id'].to_i
-      RoomUser.async.where(room_id: room_id, user_id: user.id).update(active: false)
+      RoomUser.where(room_id: room_id, user_id: user.id).update(active: false)
 
       user_ch = user_channels[user.id]
       room_ch = room_channels[room_id]
@@ -132,7 +137,7 @@ module Chat
       room_id = msg['room_id'].to_i
       room_ch = room_channels[room_id]
 
-      message = Chat::Model::RoomMessage.async.create({
+      message = Chat::Model::RoomMessage.create({
         user_id: user.id,
         room_id: room_id,
         body: msg['body'],
@@ -148,7 +153,7 @@ module Chat
       message = {
         type: 'conversation_message',
         conversation_id: msg['conversation_id'],
-        body: msg['body']
+        body: msg['body'],
         created_at: Time.now
       }.to_json
 

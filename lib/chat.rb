@@ -1,6 +1,6 @@
 require 'sequel'
 require 'march_hare'
-require 'celluloid'
+require 'celluloid/current'
 require 'json'
 
 require 'chat/version'
