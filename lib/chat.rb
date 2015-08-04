@@ -1,5 +1,7 @@
 require 'sequel'
 require 'march_hare'
+require 'celluloid'
+require 'json'
 
 require 'chat/version'
 require 'chat/config'
@@ -23,13 +25,16 @@ end
 
 require 'chat/model/user'
 require 'chat/model/room'
+require 'chat/model/conversation'
 require 'chat/model/room_user'
 require 'chat/model/room_message'
-require 'chat/model/user_message'
+require 'chat/model/conversation_message'
 
+require 'chat/channel/user'
+require 'chat/channel/room'
+
+require 'chat/message_service'
 require 'chat/app'
-require 'chat/user'
-require 'chat/room'
 
 at_exit do
   Chat::DB.disconnect

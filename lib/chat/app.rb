@@ -30,7 +30,11 @@ module Chat
         end
 
         unless @current_user
-          @current_user = Model::User.create(created_at: Time.now)
+          @current_user = Model::User.create({
+            name: "user_" + (0...4).map { ('0'..'9').to_a[rand(10)] }.join,
+            token: (0...40).map { ('a'..'z').to_a[rand(26)] }.join,
+            created_at: Time.now
+          })
           session[:user_id] = @current_user.id
         end
 
@@ -41,29 +45,46 @@ module Chat
     before { current_user }
 
     get "/" do
-      @rooms = Model::Room.all
+      @rooms = Model::Room.order(:id)
+      @users = Model::User.order(:name).where(active: true)
+      @conversations = Model::Conversation.where('user1_id = ? OR user2_id = ?', current_user.id, current_user.id).all
+
       erb :"index.html"
     end
 
-    get  %r{/room/([0-9a-z_]+)} do |n|
-      @room = Model::Room.find_or_create(name: n) do |r|
+    get  %r{/rooms/([0-9a-z_]+)} do |n|
+      content_type :json
+
+      room = Model::Room.find_or_create(name: n) do |r|
         r.created_at = Time.now
       end
 
-      @room_messages = @room.room_messages
+      room_messages = room.room_messages
 
-      @room_user = Model::RoomUser.find_or_create(user_id: current_user.id, room_id: @room.id) do |ru|
+      room_user = Model::RoomUser.find_or_create(user_id: current_user.id, room_id: room.id) do |ru|
         ru.created_at = Time.now
-        ru.token = (0...40).map { ('a'..'z').to_a[rand(26)] }.join
       end
 
-      erb :"room.html"
+      { room: room,
+        room_messages: room_messages,
+        room_user: room_user
+      }.to_json
     end
 
-    get "/assets/js/application.js" do
-      @websocket_uri = websocket_uri(current_user)
-      content_type :js
-      erb :"application.js"
+    get '/conversations/:user_id' do |user_id|
+      content_type :json
+
+      user1_id, user2_id = [current_user.id, user_id.to_i].sort
+
+      conversation = Model::Conversation.find_or_create(user1_id: user1_id, user2_id: user2_id) do |c|
+        c.created_at = Time.now
+      end
+
+      conversation_messages = conversation.conversation_messages
+
+      { conversation: conversation,
+        conversation_messages: conversation_messages
+      }.to_json
     end
 
   end

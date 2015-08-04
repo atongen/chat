@@ -1,6 +1,8 @@
 module Chat
   module Model
     class RoomUser < Sequel::Model(:room_users)
+      include Celluloid
+
       many_to_one :room
       many_to_one :user
 
