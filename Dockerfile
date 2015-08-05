@@ -13,8 +13,7 @@ RUN cd /tmp && \
   make install && \
   rm -Rf /tmp/ruby-install-0.5.0
 
-# install jruby-9.0.0.0
-RUN ruby-install jruby 9.0.0.0
+RUN ruby-install jruby 1.7.21
 
 COPY config/docker /
 
@@ -23,7 +22,7 @@ RUN export uid=1000 gid=1000 && \
   echo "app:x:${uid}:${gid}:app,,,:/home/app:/bin/false" >> /etc/passwd && \
   echo "app:x:${uid}:" >> /etc/group
 
-ENV PATH /opt/rubies/jruby-9.0.0.0/lib/ruby/gems/shared/bin:/opt/rubies/jruby-9.0.0.0/bin:$PATH
+ENV PATH /opt/rubies/jruby-1.7.21/lib/ruby/gems/shared/bin:/opt/rubies/jruby-1.7.21/bin:$PATH
 RUN gem install bundler
 ADD . /home/app
 RUN chown -R app:app /home/app
@@ -32,11 +31,11 @@ USER app
 ENV HOME /home/app
 WORKDIR /home/app
 
-ENV PATH /home/app/.gem/jruby/2.2.2/bin:$PATH
-ENV GEM_HOME /home/app/.gem/jruby/2.2.2
-ENV GEM_PATH /home/app/.gem/jruby/2.2.2:/opt/rubies/jruby-9.0.0.0/lib/ruby/gems/shared
-ENV GEM_ROOT /opt/rubies/jruby-9.0.0.0/lib/ruby/gems/shared
+ENV PATH /home/app/.gem/jruby/1.9.3/bin:$PATH
+ENV GEM_HOME /home/app/.gem/jruby/1.9.3
+ENV GEM_PATH /home/app/.gem/jruby/1.9.3:/opt/rubies/jruby-1.7.21/lib/ruby/gems/shared
+ENV GEM_ROOT /opt/rubies/jruby-1.7.21/lib/ruby/gems/shared
 
 RUN bundle install
-
+ENTRYPOINT ["foreman", "start"]
 EXPOSE 5000
