@@ -7,11 +7,12 @@ module Chat
     def initialize
       @user_channels = {}
       @room_channels = {}
+      @message_store = Chat::MessageStore.new
     end
 
     def open(user, ws)
       user.update(active: true)
-      user_channels[user.id] = Chat::Channel::User.new(ws, user.id)
+      user_channels[user.id] = Chat::Channel::User.new(user.id, ws)
     end
 
     def message(user, msg)
@@ -47,7 +48,7 @@ module Chat
       # leave all rooms
       room_channels.keys.each do |room_id|
         room_ch = room_channels[room_id]
-        do_room_user_leave(room_ch, user_ch)
+        do_room_user_leave(room_ch, user_ch, user)
       end
 
       user_ch.close
@@ -69,81 +70,76 @@ module Chat
 
       room_ch.enter(user_ch)
 
-      # update user lists
-      # Chat::Model::RoomUser.room_user_ids(room_user.room_id)
-      room_ch.message({
+      message = {
         type: 'room_message',
-        user_id: 0,
+        room_id: room_id,
+        user_id: user.id,
         body: "#{user.name} joined the room",
         created_at: Time.now
-      }.to_json)
+      }
+
+      @message_store.async.room_message(message)
+      room_ch.message(message.to_json)
     end
 
     def handle_conversation_join(user, msg)
-      # sender
       user_ch = user_channels[user.id]
       recipient_id = msg['recipient_id']
 
       message = {
         type: 'conversation_message',
+        recipient_id: recipient_id,
         conversation_id: msg['conversation_id'],
         body: "#{user.name} join the conversation",
         created_at: Time.now
-      }.to_json
+      }
 
-      # create conversation_message
-
-      user_ch.message(message)
-      user_ch.message(message, user_id: recipient_id)
+      @message_store.async.conversation_message(message)
+      json = message.to_json
+      user_ch.message(json, user_id: user.id)
+      user_ch.message(json, user_id: recipient_id)
     end
 
     def handle_room_leave(user, msg)
       room_id = msg['room_id'].to_i
-      RoomUser.where(room_id: room_id, user_id: user.id).update(active: false)
+      Chat::Model::RoomUser.where(room_id: room_id, user_id: user.id).update(active: false)
 
       user_ch = user_channels[user.id]
       room_ch = room_channels[room_id]
 
-      do_room_user_leave(room_ch, user_ch)
-
-      # update user lists
-      # Chat::Model::RoomUser.room_user_ids(room_user.room_id)
-      room_ch.message({
-        type: 'room_message',
-        user_id: 0,
-        body: "#{user.id} joined the room",
-        created_at: Time.now
-      }.to_json)
+      do_room_user_leave(room_ch, user_ch, user)
     end
 
     def handle_conversation_leave(user, msg)
-      # sender
       user_ch = user_channels[user.id]
       recipient_id = msg['recipient_id']
 
       message = {
         type: 'conversation_message',
         conversation_id: msg['conversation_id'],
+        recipient_id: recipient_id,
         body: "#{user.name} left the conversation",
         created_at: Time.now
-      }.to_json
+      }
 
-      # create conversation_message
-
-      user_ch.message(message, user_id: recipient_id)
+      @message_store.async.conversation_message(message)
+      user_ch.message(message.to_json, user_id: recipient_id)
     end
 
     def handle_room_message(user, msg)
       room_id = msg['room_id'].to_i
       room_ch = room_channels[room_id]
 
-      message = Chat::Model::RoomMessage.create({
+      message = {
+        type: 'room_message',
         user_id: user.id,
         room_id: room_id,
         body: msg['body'],
         created_at: Time.now
-      })
-      room_ch.message(to_message(message))
+      }
+
+      @message_store.async.room_message(message)
+      room_ch.message(message.to_json)
     end
 
     def handle_conversation_message(user, msg)
@@ -153,47 +149,35 @@ module Chat
       message = {
         type: 'conversation_message',
         conversation_id: msg['conversation_id'],
+        recipient_id: recipient_id,
         body: msg['body'],
         created_at: Time.now
-      }.to_json
+      }
 
-      # create conversation_message
-
-      user_ch.message(message)
-      user_ch.message(message, user_id: recipient_id)
+      @message_store.async.conversation_message(message)
+      json = message.to_json
+      user_ch.message(json, user_id: user.id)
+      user_ch.message(json, user_id: recipient_id)
     end
 
-    def do_room_user_leave(room_ch, user_ch)
+    def do_room_user_leave(room_ch, user_ch, user)
       room_ch.leave(user_ch)
 
       if room_ch.empty?
         room_ch.close
-        room_channels.delete(room_ch)
+        room_channels.delete(room_ch.id)
       else
-        # tell room we're leaving
-        room_ch.message({
+        message = {
           type: 'room_message',
-          user_id: 0,
-          body: "#{user.id} left",
+          room_id: room_ch.id,
+          user_id: user.id,
+          body: "#{user.name} left the room",
           created_at: Time.now
-        }.to_json)
-        # update user lists in room
-        # Chat::Model::RoomUser.room_user_ids(room_user.room_id)
+        }
+
+        @message_store.async.room_message(message)
+        room_ch.message(message.to_json)
       end
-    end
-
-    def to_message(obj)
-      m = obj.values
-      m[:type] = underscore(obj.class.name.split('::').last)
-      m.to_json
-    end
-
-    def underscore(str)
-      str.gsub(/::/, '/').
-        gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
-        gsub(/([a-z\d])([A-Z])/,'\1_\2').
-        tr("-", "_").
-        downcase
     end
 
   end

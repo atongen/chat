@@ -9,6 +9,12 @@ module Chat
           .where(active: true)
           .select_map(:user_id)
       end
+
+      def validate
+        super
+        validates_presence :name
+        validates_unique :name
+      end
     end
   end
 end

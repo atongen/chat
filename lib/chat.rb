@@ -23,6 +23,10 @@ module Chat
   end
 end
 
+Sequel::Model.plugin :json_serializer
+Sequel::Model.plugin :validation_helpers
+Sequel::Model.plugin :tactical_eager_loading
+
 require 'chat/model/user'
 require 'chat/model/room'
 require 'chat/model/conversation'
@@ -34,6 +38,7 @@ require 'chat/channel/user'
 require 'chat/channel/room'
 
 require 'chat/message_service'
+require 'chat/message_store'
 require 'chat/app'
 
 at_exit do

@@ -2,6 +2,9 @@ module Chat
   module Channel
     class User
 
+      attr_reader :id,
+                  :ws
+
       def initialize(id, ws)
         @id = id
         @ws = ws
@@ -20,17 +23,11 @@ module Chat
       def message(data, options = {})
         opts = {}
         opts[:routing_key] = "user-#{options[:user_id]}" if options[:user_id]
-        x.publish(data, opts)
-      end
-
-      def broadcast(data)
-        room_channels.each do |room_ch|
-          room_ch.message(data)
-        end
+        @x.publish(data, opts)
       end
 
       def close
-        ch.close
+        @ch.close
       end
 
     end

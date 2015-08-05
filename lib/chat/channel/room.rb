@@ -3,10 +3,7 @@ module Chat
     class Room
 
       attr_reader :id,
-                  :user_channels,
-                  :ch,
-                  :x,
-                  :q
+                  :user_channels
 
       def initialize(id)
         @id = id
@@ -30,11 +27,11 @@ module Chat
       end
 
       def close
-        ch.close
+        @ch.close
       end
 
       def message(data)
-        x.publish(data)
+        @x.publish(data)
       end
 
       def enter(user_channel)
