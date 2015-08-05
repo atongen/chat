@@ -1,0 +1,18 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+#messages {
+  margin-bottom: 60px;
+  overflow-y: scroll;
+}
+
+#say {
+  position: absolute;
+  bottom: 0;
+  height: 60px;
+}
+

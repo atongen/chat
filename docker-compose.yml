@@ -1,0 +1,41 @@
+web:
+  build: .
+  links:
+    - postgres
+    - rabbitmq
+  ports:
+    - "5000:5000"
+  env_file:
+    - '.env.docker'
+socket1:
+  build: .
+  links:
+    - postgres
+    - rabbitmq
+  ports:
+    - "6480:5000"
+  env_file:
+    - '.env.docker'
+socket2:
+  build: .
+  links:
+    - postgres
+    - rabbitmq
+  ports:
+    - "6481:5000"
+  env_file:
+    - '.env.docker'
+postgres:
+  build: dockerfiles/postgres
+  ports:
+    - "5432:5432"
+  env_file:
+    - '.env.docker'
+rabbitmq:
+  image: rabbitmq:3.5-management
+  hostname: rabbit1
+  ports:
+    - "5672:5672"
+    - "15672:15672"
+  env_file:
+    - '.env.docker'
